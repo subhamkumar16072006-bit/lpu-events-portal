@@ -65,14 +65,14 @@ const Scanner = () => {
         const id = rawId.trim();
         if (!id) return;
 
-        // Validation: 36 char UUID OR 8 char short ID OR numeric Reg No (usually 8+ digits)
+        // Validation: 5-digit Code OR 36 char UUID OR 8 char short ID
+        const is5DigitCode = /^\d{5}$/.test(id);
         const isPotentialUUID = isValidUUID(id);
         const isShortID = id.length === 8;
-        const isRegNo = /^\d+$/.test(id);
 
-        if (!isPotentialUUID && !isShortID && !isRegNo) {
+        if (!is5DigitCode && !isPotentialUUID && !isShortID) {
             setStatus('invalid');
-            setErrorMsg('Invalid format. Please enter the 8-character Ticket ID or your Registration Number.');
+            setErrorMsg('Invalid format. Please enter the 5-digit Verification Code or Ticket ID.');
             setHistory(prev => [{ id, success: false, time: timeNow() }, ...prev].slice(0, 20));
             setActive(false);
             return;
@@ -92,7 +92,7 @@ const Scanner = () => {
             if (!data) {
                 // Not found in DB
                 setStatus('invalid');
-                setErrorMsg('No ticket found. Check the ID/Reg No and try again.');
+                setErrorMsg('No ticket found with this code. Please check and try again.');
                 setHistory(prev => [{ id, success: false, time: timeNow() }, ...prev].slice(0, 20));
             } else if (data.status === 'used') {
                 // Already scanned
@@ -105,6 +105,7 @@ const Scanner = () => {
                     eventName: data.event_name,
                     eventDate: data.event_date,
                     status: data.status,
+                    verificationCode: data.verification_code
                 });
                 setHistory(prev => [{
                     id: data.id, success: false,
@@ -129,6 +130,7 @@ const Scanner = () => {
                     course: data.course,
                     eventName: data.event_name,
                     eventDate: data.event_date,
+                    verificationCode: data.verification_code
                 });
                 setHistory(prev => [{
                     id: data.id, success: true,
@@ -213,6 +215,7 @@ const Scanner = () => {
                                 <h2 className="text-xl font-bold text-white mb-1">Entry Authorized ✅</h2>
                                 <p className="text-gray-500 text-sm mb-5">Ticket marked as used</p>
                                 <div className="bg-[#1A1A1A] rounded-xl border border-white/5 text-left mb-5 divide-y divide-white/5">
+                                    <ResultRow icon={Hash} label="Verification Code" value={scannedData.verificationCode} />
                                     <ResultRow icon={User} label="Student Name" value={scannedData.studentName} />
                                     <ResultRow icon={Hash} label="Registration No." value={scannedData.regNo} />
                                     <ResultRow icon={BookOpen} label="Course" value={scannedData.course} />
@@ -274,7 +277,7 @@ const Scanner = () => {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Paste Registration UUID (e.g. a1b2c3d4-...)"
+                                placeholder="Enter 5-digit Code or Ticket ID..."
                                 value={manualId}
                                 onChange={(e) => setManualId(e.target.value)}
                                 onKeyDown={handleKeyDown}

@@ -60,8 +60,11 @@ const TicketCard = ({ registration }) => {
                     <QrCode size={80} className="text-black" />
                 </div>
                 <div className="text-center space-y-1">
-                    <p className="text-[10px] text-gray-500 font-mono">ID: {registration.id.slice(0, 8)}</p>
-                    <p className="text-[10px] text-primary font-bold">REG: {registration.registration_number}</p>
+                    <p className="text-[10px] text-gray-400 font-mono">Short ID: {registration.id.slice(0, 8)}</p>
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-1 mt-1">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Verification Code</p>
+                        <p className="text-lg font-black text-primary font-mono">{registration.verification_code || '-----'}</p>
+                    </div>
                 </div>
 
                 <button className="text-sm font-medium text-primary hover:text-white transition-colors flex items-center gap-1">

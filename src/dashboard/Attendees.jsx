@@ -201,11 +201,17 @@ const StudentDrillDown = ({ event, onBack }) => {
         fetchStudents();
     }, [event.id]);
 
-    const filtered = students.filter(s =>
-        s.student_name?.toLowerCase().includes(search.toLowerCase()) ||
-        s.registration_number?.toLowerCase().includes(search.toLowerCase()) ||
-        s.course?.toLowerCase().includes(search.toLowerCase())
-    );
+    const [attendanceFilter, setAttendanceFilter] = useState('all'); // 'all' | 'used' | 'confirmed'
+
+    const filtered = students.filter(s => {
+        const matchesSearch = (
+            s.student_name?.toLowerCase().includes(search.toLowerCase()) ||
+            s.registration_number?.toLowerCase().includes(search.toLowerCase()) ||
+            s.course?.toLowerCase().includes(search.toLowerCase())
+        );
+        const matchesAttendance = attendanceFilter === 'all' || s.status === attendanceFilter;
+        return matchesSearch && matchesAttendance;
+    });
 
     const checkedIn = students.filter(s => s.status === 'used').length;
 
@@ -266,6 +272,26 @@ const StudentDrillDown = ({ event, onBack }) => {
                     ))}
                 </div>
             )}
+
+            {/* Attendance Filters */}
+            <div className="flex bg-[#222] p-1 rounded-xl w-fit border border-white/5 mb-2">
+                {[
+                    { id: 'all', label: `All (${students.length})` },
+                    { id: 'used', label: `Checked In (${checkedIn})` },
+                    { id: 'confirmed', label: `Not Attended (${students.length - checkedIn})` }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setAttendanceFilter(tab.id)}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${attendanceFilter === tab.id
+                            ? 'bg-primary text-white shadow-lg shadow-orange-500/20'
+                            : 'text-gray-500 hover:text-gray-300'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
             {/* Search */}
             <div className="relative">
