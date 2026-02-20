@@ -12,6 +12,9 @@ set verification_code = floor(random() * 90000 + 10000)::text
 where verification_code is null;
 
 -- 3. Update book_ticket RPC to generate unique 5-digit code
+-- We drop it first to avoid "cannot change return type" errors if it already exists
+drop function if exists public.book_ticket(uuid, uuid, text, text, text);
+
 create or replace function public.book_ticket(
   p_event_id uuid,
   p_student_id uuid,
@@ -88,6 +91,8 @@ end;
 $$;
 
 -- 4. Update verify_ticket RPC to support 5-digit code
+drop function if exists public.verify_ticket(text);
+
 create or replace function public.verify_ticket(
   p_search_query text
 )
