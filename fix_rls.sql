@@ -71,3 +71,16 @@ create policy "Students can register"
 on public.registrations for insert
 to authenticated
 with check (true);
+
+-- Organizers can update registrations (confirm attendance)
+drop policy if exists "Organizers can update registration status" on public.registrations;
+create policy "Organizers can update registration status"
+on public.registrations for update
+to authenticated
+using (
+  exists (
+    select 1 from public.tickets
+    where tickets.id = registrations.event_id
+    and tickets.organizer_id = auth.uid()
+  )
+);
