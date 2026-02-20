@@ -1,15 +1,15 @@
 {
     "version": 2,
-    "builds": [
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
         {
-            "src": "api/send-ticket.cjs",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
+            "source": "/api/send-ticket",
+            "destination": "/api/send-ticket.cjs"
+        },
         {
-            "src": "/api/send-ticket",
-            "dest": "/api/send-ticket.cjs"
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
