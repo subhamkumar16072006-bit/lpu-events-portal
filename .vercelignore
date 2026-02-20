@@ -1,0 +1,6 @@
+# Local dev server — not needed on Vercel
+api/server.cjs
+
+# Environment files — configure via Vercel Dashboard instead
+.env
+.env.local

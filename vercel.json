@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/send-ticket.cjs",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/send-ticket",
+            "dest": "/api/send-ticket.cjs"
+        }
+    ]
+}
