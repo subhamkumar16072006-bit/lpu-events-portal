@@ -75,8 +75,8 @@ const ViewDetailsDrawer = ({ event, onClose }) => {
                     </div>
 
                     <div className={`px-4 py-3 rounded-xl border text-sm font-medium flex items-center gap-2 ${event.sales_paused
-                            ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                            : 'bg-green-500/10 border-green-500/20 text-green-400'
+                        ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                        : 'bg-green-500/10 border-green-500/20 text-green-400'
                         }`}>
                         <span className="w-2 h-2 rounded-full bg-current" />
                         Sales are currently {event.sales_paused ? 'PAUSED' : 'ACTIVE'}
@@ -261,7 +261,15 @@ const Dashboard = () => {
     const fetchEvents = async () => {
         setLoading(true);
         try {
+            // Get the currently logged-in organizer
+            const { data: { user } } = await supabase.auth.getUser();
+
             let query = supabase.from('tickets').select('*').order('created_at', { ascending: false });
+
+            // Only show events created by this organizer
+            if (user) {
+                query = query.eq('organizer_id', user.id);
+            }
 
             if (activeTab !== 'all') {
                 const categoryMap = {
