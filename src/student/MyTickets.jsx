@@ -59,7 +59,10 @@ const TicketCard = ({ registration }) => {
                 <div className="bg-white p-2 rounded-xl mb-3 shadow-lg group-hover:scale-105 transition-transform">
                     <QrCode size={80} className="text-black" />
                 </div>
-                <p className="text-xs text-gray-500 font-mono mb-3">ID: {registration.id.slice(0, 8)}</p>
+                <div className="text-center space-y-1">
+                    <p className="text-[10px] text-gray-500 font-mono">ID: {registration.id.slice(0, 8)}</p>
+                    <p className="text-[10px] text-primary font-bold">REG: {registration.registration_number}</p>
+                </div>
 
                 <button className="text-sm font-medium text-primary hover:text-white transition-colors flex items-center gap-1">
                     Download Ticket <ExternalLink size={14} />

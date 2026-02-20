@@ -28,8 +28,8 @@ const ResultRow = ({ label, value, icon: Icon }) => (
 // ── Scan History Item ──────────────────────────────────────────────────────
 const HistoryItem = ({ item }) => (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${item.success
-            ? 'bg-green-500/5 border-green-500/10'
-            : 'bg-red-500/5 border-red-500/10'
+        ? 'bg-green-500/5 border-green-500/10'
+        : 'bg-red-500/5 border-red-500/10'
         }`}>
         {item.success
             ? <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
@@ -65,9 +65,14 @@ const Scanner = () => {
         const id = rawId.trim();
         if (!id) return;
 
-        if (!isValidUUID(id)) {
+        // Validation: 36 char UUID OR 8 char short ID OR numeric Reg No (usually 8+ digits)
+        const isPotentialUUID = isValidUUID(id);
+        const isShortID = id.length === 8;
+        const isRegNo = /^\d+$/.test(id);
+
+        if (!isPotentialUUID && !isShortID && !isRegNo) {
             setStatus('invalid');
-            setErrorMsg('The entered ID is not a valid Ticket UUID. Please check and try again.');
+            setErrorMsg('Invalid format. Please enter the 8-character Ticket ID or your Registration Number.');
             setHistory(prev => [{ id, success: false, time: timeNow() }, ...prev].slice(0, 20));
             setActive(false);
             return;
@@ -77,19 +82,17 @@ const Scanner = () => {
         setActive(false);
 
         try {
-            // Look up the registration by its UUID, join ticket details
+            // Use the new verify_ticket RPC helper
             const { data, error } = await supabase
-                .from('registrations')
-                .select('*, tickets(event_name, event_date)')
-                .eq('id', id)
-                .maybeSingle(); // returns null if not found (no error)
+                .rpc('verify_ticket', { p_search_query: id })
+                .maybeSingle();
 
             if (error) throw error;
 
             if (!data) {
                 // Not found in DB
                 setStatus('invalid');
-                setErrorMsg('No registration found with this ID. It may be fake or already cancelled.');
+                setErrorMsg('No ticket found. Check the ID/Reg No and try again.');
                 setHistory(prev => [{ id, success: false, time: timeNow() }, ...prev].slice(0, 20));
             } else if (data.status === 'used') {
                 // Already scanned
@@ -99,27 +102,24 @@ const Scanner = () => {
                     studentName: data.student_name,
                     regNo: data.registration_number,
                     course: data.course,
-                    eventName: data.tickets?.event_name,
-                    eventDate: data.tickets?.event_date,
+                    eventName: data.event_name,
+                    eventDate: data.event_date,
                     status: data.status,
                 });
                 setHistory(prev => [{
-                    id, success: false,
+                    id: data.id, success: false,
                     studentName: data.student_name,
-                    eventName: data.tickets?.event_name,
+                    eventName: data.event_name,
                     time: timeNow()
                 }, ...prev].slice(0, 20));
             } else {
-                // Valid — mark as used
+                // Valid — mark as used in registrations table
                 const { error: updateErr } = await supabase
                     .from('registrations')
                     .update({ status: 'used' })
-                    .eq('id', id);
+                    .eq('id', data.id);
 
-                if (updateErr) {
-                    // Non-fatal — show success but log the update failure
-                    console.warn('Could not mark ticket as used:', updateErr.message);
-                }
+                if (updateErr) throw updateErr;
 
                 setStatus('success');
                 setScannedData({
@@ -127,20 +127,20 @@ const Scanner = () => {
                     studentName: data.student_name,
                     regNo: data.registration_number,
                     course: data.course,
-                    eventName: data.tickets?.event_name,
-                    eventDate: data.tickets?.event_date,
+                    eventName: data.event_name,
+                    eventDate: data.event_date,
                 });
                 setHistory(prev => [{
-                    id, success: true,
+                    id: data.id, success: true,
                     studentName: data.student_name,
-                    eventName: data.tickets?.event_name,
+                    eventName: data.event_name,
                     time: timeNow()
                 }, ...prev].slice(0, 20));
             }
         } catch (err) {
             console.error('Scanner error:', err);
             setStatus('invalid');
-            setErrorMsg('A database error occurred: ' + err.message);
+            setErrorMsg('Error: ' + err.message);
             setHistory(prev => [{ id, success: false, time: timeNow() }, ...prev].slice(0, 20));
         } finally {
             setLoading(false);
